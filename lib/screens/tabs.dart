@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/models/meal.dart';
 import 'package:todo_app/screens/categories.dart';
+import 'package:todo_app/screens/filters.dart';
 import 'package:todo_app/screens/meals.dart';
 import 'package:todo_app/widgets/main_drawer.dart';
 
@@ -14,64 +15,80 @@ class TabsScreen extends StatefulWidget {
 }
 
 class _TabsScreenState extends State<TabsScreen> {
+  int _selectedPageIndex = 0;
+  final List<Meal> _favoriteMeals = [];
 
-  int _selectedPageIndex=0;
-  final List<Meal> _favoriteMeals=[];
-
-  void _showInfoMessage(String message){
+  void _showInfoMessage(String message) {
     ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _toggleMealFavoriteStatus(Meal meal){
-    final isExisting= _favoriteMeals.contains(meal);
+  void _toggleMealFavoriteStatus(Meal meal) {
+    final isExisting = _favoriteMeals.contains(meal);
 
-    if(isExisting){
+    if (isExisting) {
       setState(() {
         _favoriteMeals.remove(meal);
       });
       _showInfoMessage("Meal is no longer a favorite.");
-    }
-    else{
+    } else {
       setState(() {
-      _favoriteMeals.add(meal);
+        _favoriteMeals.add(meal);
       });
       _showInfoMessage("Meal is marked as a favorite");
     }
   }
 
-  void _selectPage(int index){
-  setState(() {
-    _selectedPageIndex=index;
-  });
+  void _selectPage(int index) {
+    setState(() {
+      _selectedPageIndex = index;
+    });
+  }
+
+  void _setScreen(String identifier) {
+    Navigator.of(context).pop();
+    if (identifier == 'filters') {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (ctx) => const FiltersScreen()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget activePage = CategoriesScreen(
+      onToggleFavorite: _toggleMealFavoriteStatus,
+    );
+    var activePageTitle = 'Catgories';
 
-    Widget activePage=  CategoriesScreen(onToggleFavorite: _toggleMealFavoriteStatus,);
-    var activePageTitle= 'Catgories';
-
-    if(_selectedPageIndex==1){
-      activePage= MealsScreen( meals: _favoriteMeals, onToggleFavorite: _toggleMealFavoriteStatus ,);
+    if (_selectedPageIndex == 1) {
+      activePage = MealsScreen(
+        meals: _favoriteMeals,
+        onToggleFavorite: _toggleMealFavoriteStatus,
+      );
       activePageTitle = 'Your Favorites';
     }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(activePageTitle),
-        ),
-      drawer: const MainDrawer(),
-      
-      body: activePage ,
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: _selectPage,
-        currentIndex: _selectedPageIndex,
-        items:const [
-           BottomNavigationBarItem(icon: Icon(Icons.set_meal), label: "Categories"),
-           BottomNavigationBarItem(icon: Icon(Icons.star), label:'Favorites' ,),
-        ]
       ),
+      drawer: MainDrawer(
+        onSelectScreen: _setScreen,
+      ),
+      body: activePage,
+      bottomNavigationBar: BottomNavigationBar(
+          onTap: _selectPage,
+          currentIndex: _selectedPageIndex,
+          items: const [
+            BottomNavigationBarItem(
+                icon: Icon(Icons.set_meal), label: "Categories"),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.star),
+              label: 'Favorites',
+            ),
+          ]),
     );
   }
 }
